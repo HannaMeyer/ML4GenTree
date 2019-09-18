@@ -9,8 +9,8 @@ output:
     theme: united
 vignette: >
   %\VignetteIndexEntry{Introduction to CAST}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 abstract: "Machine learning algorithms find frequent application in spatial prediction of biotic and abiotic environmental variables. However, the characteristics of spatial data, especially spatial autocorrelation, are widely ignored. This tutorial shows that this is problematic and results in models that can reproduce training data but are unable to make spatial predictions beyond the locations of the training samples. We show that not only spatial validation strategies but also spatial variable selection is essential for reliable spatial predictions. A land cover classification task of the 'Marburg Open Forest' (www.natur40.org), is used for demonstration. Using the machine learning algorithm Random Forests it is first shown how to set up a 'default' model for spatial prediction. It will then be shown how spatial validation affects the view on the model performance. It will further be shown how spatial variable selection affects the predictions to overcome overfitting due to spatial dependencies."
 editor_options: 
   chunk_output_type: console
@@ -79,7 +79,7 @@ Using mapview's viewRGB function we can visualize the aerial image channels as t
 
 ```{r visMV, warning=FALSE, message= FALSE}
 viewRGB(predStack, r = 3, g = 2, b = 1, map.types = "Esri.WorldImagery")+
-  mapview(trainSites)
+  mapview(trainSites,zcol="Type")
 ```
 
 ### Extract raster information
@@ -92,6 +92,13 @@ extr <- merge(extr, trainSites, by.x="ID", by.y="PolygonID")
 head(extr)
 ```
 
+```{r visRel}
+boxplot(extr$pca_5_sd~extr$Type,las=2)
+```
+
+
+
+
 In order to speed things up, for this tutorial we will reduce the data. Therefore, from each training polygon only 15% of the pixels will be used for model training.
 
 ```{r subset}
@@ -99,6 +106,14 @@ set.seed(100)
 trainids <- createDataPartition(extr$ID,list=FALSE,p=0.15)
 trainDat <- extr[trainids,]
 ```
+
+```{r featurePlot2}
+featurePlot(x = extr[, c("red","vvi","dem")], 
+            y = factor(extr$Type), 
+            plot = "pairs",
+            auto.key = list(columns = 4))
+```
+
 
 ## Basic Model training (no consideration of spatial dependencies)
 ### Define predictors and response
